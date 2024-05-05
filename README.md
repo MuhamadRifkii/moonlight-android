@@ -17,7 +17,7 @@ This fork enable Absolute Touch (Tablet Mode) functionality and added Game Menu 
 
 All of the added code is not mine, i've simply just copy it from the pull request and compile it myself.
 
-This fork is intended to use upon next version of moonlight is having Absolute Touch functionality is added to the master branch. (Please don't complain to me 
+This fork is intended to use upon next version of moonlight is having Absolute Touch functionality added to the master branch. (Please don't complain to me 
 if something is not working as intended!). 
 
 ## Downloads
