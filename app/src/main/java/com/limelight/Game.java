@@ -4,6 +4,7 @@ package com.limelight;
 import com.limelight.binding.PlatformBinding;
 import com.limelight.binding.audio.AndroidAudioRenderer;
 import com.limelight.binding.input.ControllerHandler;
+import com.limelight.binding.input.GameInputDevice;
 import com.limelight.binding.input.KeyboardTranslator;
 import com.limelight.binding.input.capture.InputCaptureManager;
 import com.limelight.binding.input.capture.InputCaptureProvider;
@@ -23,7 +24,6 @@ import com.limelight.nvstream.StreamConfiguration;
 import com.limelight.nvstream.http.ComputerDetails;
 import com.limelight.nvstream.http.NvApp;
 import com.limelight.nvstream.http.NvHTTP;
-import com.limelight.nvstream.input.ControllerPacket;
 import com.limelight.nvstream.input.KeyboardPacket;
 import com.limelight.nvstream.input.MouseButtonPacket;
 import com.limelight.nvstream.jni.MoonBridge;
@@ -146,6 +146,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     private TextView notificationOverlayView;
     private int requestedNotificationOverlayVisibility = View.GONE;
     private TextView performanceOverlayView;
+    private int requestedPerformanceOverlayVisibility = View.GONE;
 
     private MediaCodecDecoderRenderer decoderRenderer;
     private boolean reportedCrash;
@@ -368,10 +369,10 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             }
         }
 
-        // Check if the user has enabled performance stats overlay
-        if (prefConfig.enablePerfOverlay) {
-            performanceOverlayView.setVisibility(View.VISIBLE);
-        }
+//        // Check if the user has enabled performance stats overlay
+//        if (prefConfig.enablePerfOverlay) {
+//            performanceOverlayView.setVisibility(View.VISIBLE);
+//        }
 
         decoderRenderer = new MediaCodecDecoderRenderer(
                 this,
@@ -613,9 +614,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                     virtualController.show();
                 }
 
-                if (prefConfig.enablePerfOverlay) {
-                    performanceOverlayView.setVisibility(View.VISIBLE);
-                }
+                performanceOverlayView.setVisibility(requestedPerformanceOverlayVisibility);
 
                 notificationOverlayView.setVisibility(requestedNotificationOverlayVisibility);
 
@@ -1307,7 +1306,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
 
     @Override
     public boolean handleKeyDown(KeyEvent event) {
-        // Pass-through virtual navigation keys
+        // Pass-through navigation keys
         if ((event.getFlags() & KeyEvent.FLAG_VIRTUAL_HARD_KEY) != 0) {
             return false;
         }
@@ -2016,11 +2015,11 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                 // TODO: Re-enable native touch when have a better solution for handling
                 // cancelled touches from Android gestures and 3 finger taps to activate
                 // the software keyboard.
-                /*if (!prefConfig.touchscreenTrackpad && trySendTouchEvent(view, event)) {
+                if (!prefConfig.touchscreenTrackpad && trySendTouchEvent(view, event)) {
                     // If this host supports touch events and absolute touch is enabled,
                     // send it directly as a touch event.
                     return true;
-                }*/
+                }
 
                 TouchContext context = getTouchContext(actionIndex);
                 if (context == null) {
@@ -2647,6 +2646,11 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     }
 
     @Override
+    public boolean isPerfOverlayVisible() {
+        return requestedPerformanceOverlayVisibility == View.VISIBLE;
+    }
+
+    @Override
     public void onUsbPermissionPromptStarting() {
         // Disable PiP auto-enter while the USB permission prompt is on-screen. This prevents
         // us from entering PiP while the user is interacting with the OS permission dialog.
@@ -2661,6 +2665,10 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     }
 
     @Override
+    public void showGameMenu(GameInputDevice device) {
+        new GameMenu(this, conn, device);
+    }
+    @Override
     public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
         switch (keyEvent.getAction()) {
             case KeyEvent.ACTION_DOWN:
@@ -2672,5 +2680,29 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             default:
                 return false;
         }
+    }
+    public void disconnect() {
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Instead of "closing" the game activity open the game menu. The user has to select
+        // "Disconnect" within the game menu to actually disconnect from the remote host.
+        //
+        // Use the onBackPressed instead of the onKey function, since the onKey function
+        // also captures events while having the on-screen keyboard open.  Using onBackPressed
+        // ensures that Android properly handles the back key when needed and only open the game
+        // menu when the activity would be closed.
+        showGameMenu(null);
+    }
+
+    public void togglePerformanceOverlay() {
+        if (requestedPerformanceOverlayVisibility == View.VISIBLE) {
+            requestedPerformanceOverlayVisibility = View.GONE;
+        } else {
+            requestedPerformanceOverlayVisibility = View.VISIBLE;
+        }
+        performanceOverlayView.setVisibility(requestedPerformanceOverlayVisibility);
     }
 }
