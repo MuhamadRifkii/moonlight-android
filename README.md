@@ -12,6 +12,14 @@ Moonlight also has a [PC client](https://github.com/moonlight-stream/moonlight-q
 
 You can follow development on our [Discord server](https://moonlight-stream.org/discord) and help translate Moonlight into your language on [Weblate](https://hosted.weblate.org/projects/moonlight/moonlight-android/).
 
+## Update
+This fork enable Absolute Touch (Tablet Mode) functionality and added Game Menu upon pressing Back button and added custom resolution option.
+
+All of the added code is not mine, i've simply just copy it from the pull request and compile it myself.
+
+This fork is intended to use upon next version of moonlight is having Absolute Touch functionality is added to the master branch. (Please don't complain to me 
+if something is not working as intended!). 
+
 ## Downloads
 * [Google Play Store](https://play.google.com/store/apps/details?id=com.limelight)
 * [Amazon App Store](https://www.amazon.com/gp/product/B00JK4MFN2)
