@@ -61,6 +61,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Rational;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.Display;
 import android.view.InputDevice;
 import android.view.KeyCharacterMap;
@@ -74,8 +76,8 @@ import android.view.View.OnSystemUiVisibilityChangeListener;
 import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -147,6 +149,8 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     private int requestedNotificationOverlayVisibility = View.GONE;
     private TextView performanceOverlayView;
     private int requestedPerformanceOverlayVisibility = View.GONE;
+
+    private boolean isClosingSidebar = false;
 
     private MediaCodecDecoderRenderer decoderRenderer;
     private boolean reportedCrash;
@@ -1479,9 +1483,15 @@ public class Game extends Activity implements SurfaceHolder.Callback,
 
     @Override
     public void toggleKeyboard() {
+        View sidebar = findViewById(R.id.game_menu_sidebar);
+        View overlay = findViewById(R.id.sidebar_overlay);
+
         LimeLog.info("Toggling keyboard overlay");
         InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         inputManager.toggleSoftInput(0, 0);
+
+        sidebar.setVisibility(View.GONE);
+        overlay.setVisibility(View.GONE);
     }
 
     private byte getLiTouchTypeFromEvent(MotionEvent event) {
@@ -2667,7 +2677,44 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     @Override
     public void showGameMenu(GameInputDevice device) {
         new GameMenu(this, conn, device);
+        View sidebar = findViewById(R.id.game_menu_sidebar);
+        View overlay = findViewById(R.id.sidebar_overlay);
+
+        if (sidebar != null && overlay != null) {
+            sidebar.setVisibility(View.VISIBLE);
+            overlay.setVisibility(View.VISIBLE);
+
+            Animation slideIn = AnimationUtils.loadAnimation(this, R.anim.slide_in_right);
+            sidebar.startAnimation(slideIn);
+
+            overlay.setAlpha(0);
+            overlay.animate().alpha(1).setDuration(300).start();
+
+            overlay.setOnClickListener(v -> closeSidebar());
+        }
     }
+
+    private void closeSidebar() {
+        if (isClosingSidebar) {
+            return;
+        }
+        isClosingSidebar = true;
+
+        View sidebar = findViewById(R.id.game_menu_sidebar);
+        View overlay = findViewById(R.id.sidebar_overlay);
+
+        if (sidebar != null && overlay != null) {
+            Animation slideOut = AnimationUtils.loadAnimation(this, R.anim.slide_out_right);
+
+            sidebar.startAnimation(slideOut);
+            overlay.animate().alpha(0).setDuration(300).withEndAction(() -> {
+                sidebar.setVisibility(View.GONE);
+                overlay.setVisibility(View.GONE);
+                isClosingSidebar = false;
+            }).start();
+        }
+    }
+
     @Override
     public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
         switch (keyEvent.getAction()) {
@@ -2694,7 +2741,17 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         // also captures events while having the on-screen keyboard open.  Using onBackPressed
         // ensures that Android properly handles the back key when needed and only open the game
         // menu when the activity would be closed.
-        showGameMenu(null);
+        View sidebar = findViewById(R.id.game_menu_sidebar);
+        View overlay = findViewById(R.id.sidebar_overlay);
+
+        if (sidebar != null && sidebar.getVisibility() == View.VISIBLE) {
+            // Close the sidebar if it's open
+            sidebar.setVisibility(View.GONE);
+            overlay.setVisibility(View.GONE);
+        } else {
+            // If sidebar is not open, show the game menu
+            showGameMenu(null);
+        }
     }
 
     public void togglePerformanceOverlay() {

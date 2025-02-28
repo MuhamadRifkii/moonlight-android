@@ -3,7 +3,12 @@ package com.limelight;
 
 import android.app.AlertDialog;
 import android.os.Handler;
+import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
+
 import com.limelight.binding.input.GameInputDevice;
 import com.limelight.binding.input.KeyboardTranslator;
 import com.limelight.nvstream.NvConnection;
@@ -114,35 +119,57 @@ public class GameMenu {
     }
 
 
-    private void showMenuDialog(String title, MenuOption[] options) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(game);
-        builder.setTitle(title);
+    private void showSidebarMenu(String title, MenuOption[] options, boolean isSubMenu) {
+        game.runOnUiThread(() -> {
+            View sidebar = game.findViewById(R.id.game_menu_sidebar);
+            if (sidebar == null) {
+                Log.e("GameMenu", "Sidebar view is null. Ensure it's in the activity layout.");
+                return;
+            }
 
-        final ArrayAdapter<String> actions =
-                new ArrayAdapter<String>(game, android.R.layout.simple_list_item_1);
+            TextView disconnectText = sidebar.findViewById(R.id.disconnect_text);
+            if (disconnectText != null) {
+                disconnectText.setOnClickListener(v -> game.disconnect());
+            } else {
+                Log.e("GameMenu", "Disconnect button not found.");
+            }
 
-        for (MenuOption option : options) {
-            actions.add(option.label);
-        }
-
-        builder.setAdapter(actions, (dialog, which) -> {
-            String label = actions.getItem(which);
+            ListView listView = sidebar.findViewById(R.id.menu_list);
+            if (listView == null) {
+                Log.e("GameMenu", "ListView not found in sidebar.");
+                return;
+            }
+            List<String> menuLabels = new ArrayList<>();
+            if (isSubMenu) {
+                menuLabels.add("← Back"); // Add a "Back" option for submenus
+            }
             for (MenuOption option : options) {
-                if (!label.equals(option.label)) {
-                    continue;
+                menuLabels.add(option.label);
+            }
+
+            // Use custom layout for ListView items
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(game, R.layout.game_menu_item, R.id.menu_item_text, menuLabels);
+            listView.setAdapter(adapter);
+
+            listView.setOnItemClickListener((parent, view, position, id) -> {
+                if (isSubMenu && position == 0) {
+                    // If "Back" is clicked, go back to main menu
+                    showMenu();
+                    return;
                 }
 
-                run(option);
+                int realPosition = isSubMenu ? position - 1 : position;
+                run(options[realPosition]);
+            });
 
-                break;
-            }
+            sidebar.setVisibility(View.VISIBLE);
         });
-
-        builder.show();
     }
 
+
+
     private void showSpecialKeysMenu() {
-        showMenuDialog(getString(R.string.game_menu_send_keys), new MenuOption[]{
+        showSidebarMenu(getString(R.string.game_menu_send_keys), new MenuOption[]{
                 new MenuOption(getString(R.string.game_menu_send_keys_esc),
                         () -> sendKeys(new short[]{KeyboardTranslator.VK_ESCAPE})),
                 new MenuOption(getString(R.string.game_menu_send_keys_f11),
@@ -160,25 +187,24 @@ public class GameMenu {
                 new MenuOption(getString(R.string.game_menu_send_keys_insert),
                         () -> sendKeys(new short[]{KeyboardTranslator.VK_INSERT})),
                 new MenuOption(getString(R.string.game_menu_send_move_window),
-                        () -> sendKeys(new short[]{KeyboardTranslator.VK_LSHIFT, KeyboardTranslator.VK_LWIN, KeyboardTranslator.VK_RIGHT})),
-                new MenuOption(getString(R.string.game_menu_cancel), null),
-        });
+                        () -> sendKeys(new short[]{KeyboardTranslator.VK_LSHIFT, KeyboardTranslator.VK_LWIN, KeyboardTranslator.VK_RIGHT}))
+        }, true); // true to indicate this is a submenu
     }
+
 
     private void showMenu() {
         List<MenuOption> options = new ArrayList<>();
+        options.add(new MenuOption(getString(R.string.game_menu_toggle_keyboard), true, () -> game.toggleKeyboard()));
 
-        options.add(new MenuOption(getString(R.string.game_menu_toggle_keyboard), true,
-                () -> game.toggleKeyboard()));
         if (device != null) {
             options.addAll(device.getGameMenuOptions());
         }
 
         options.add(new MenuOption(getString(R.string.game_menu_toggle_performance_overlay), () -> game.togglePerformanceOverlay()));
         options.add(new MenuOption(getString(R.string.game_menu_send_keys), () -> showSpecialKeysMenu()));
-        options.add(new MenuOption(getString(R.string.game_menu_disconnect), () -> game.disconnect()));
-        options.add(new MenuOption(getString(R.string.game_menu_cancel), null));
+//        options.add(new MenuOption(getString(R.string.game_menu_disconnect), () -> game.disconnect()));
 
-        showMenuDialog("Game Menu", options.toArray(new MenuOption[options.size()]));
+        showSidebarMenu("Game Menu", options.toArray(new MenuOption[0]), false); // Pass 'false' since this is not a submenu
     }
+
 }
