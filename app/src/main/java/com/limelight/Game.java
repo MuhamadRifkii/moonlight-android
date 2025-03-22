@@ -575,7 +575,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         }
         else {
             // For regular displays, we always request landscape
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         }
     }
 
@@ -2683,6 +2683,12 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         if (sidebar != null && overlay != null) {
             sidebar.setVisibility(View.VISIBLE);
             overlay.setVisibility(View.VISIBLE);
+
+            sidebar.bringToFront();
+            overlay.bringToFront();
+
+            sidebar.setElevation(1000);
+            overlay.setElevation(999);
 
             Animation slideIn = AnimationUtils.loadAnimation(this, R.anim.slide_in_right);
             sidebar.startAnimation(slideIn);
