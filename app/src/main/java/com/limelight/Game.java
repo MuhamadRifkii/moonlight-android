@@ -60,6 +60,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.util.Rational;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -149,6 +151,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     private int requestedNotificationOverlayVisibility = View.GONE;
     private TextView performanceOverlayView;
     private int requestedPerformanceOverlayVisibility = View.GONE;
+    private boolean isVirtualControllerVisible;
 
     private boolean isClosingSidebar = false;
 
@@ -436,7 +439,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             // of gamepads removed and replugged at runtime.
             gamepadMask = 1;
         }
-        if (prefConfig.onscreenController) {
+        if (prefConfig.onscreenController || isVirtualControllerVisible) {
             // If we're using OSC, always set at least gamepad 1.
             gamepadMask |= 1;
         }
@@ -509,13 +512,19 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             }
         }
 
+        virtualController = new VirtualController(controllerHandler,
+                (FrameLayout) streamView.getParent(),
+                this);
+        virtualController.refreshLayout();
+
         if (prefConfig.onscreenController) {
-            // create virtual onscreen controller
-            virtualController = new VirtualController(controllerHandler,
-                    (FrameLayout)streamView.getParent(),
-                    this);
-            virtualController.refreshLayout();
             virtualController.show();
+            isVirtualControllerVisible = true;
+        } else {
+            new Handler(Looper.getMainLooper()).post(() -> {
+                virtualController.hide();
+                isVirtualControllerVisible = false;
+            });
         }
 
         if (prefConfig.usbDriver) {
@@ -2767,5 +2776,23 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             requestedPerformanceOverlayVisibility = View.VISIBLE;
         }
         performanceOverlayView.setVisibility(requestedPerformanceOverlayVisibility);
+    }
+
+    public void toggleVirtualController() {
+        String PREF_KEY_OSC = "checkbox_show_onscreen_controls";
+        prefConfig.onscreenController = !prefConfig.onscreenController;
+
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putBoolean(PREF_KEY_OSC, prefConfig.onscreenController);
+        editor.apply();
+
+        if (virtualController != null) {
+            if (isVirtualControllerVisible) {
+                virtualController.hide();
+            } else {
+                virtualController.show();
+            }
+            isVirtualControllerVisible = !isVirtualControllerVisible; // Toggle the state
+        }
     }
 }

@@ -201,6 +201,8 @@ public class GameMenu {
         }
 
         options.add(new MenuOption(getString(R.string.game_menu_toggle_performance_overlay), () -> game.togglePerformanceOverlay()));
+        options.add(new MenuOption(getString(R.string.game_menu_toggle_virtual_controller),
+                () -> game.toggleVirtualController()));
         options.add(new MenuOption(getString(R.string.game_menu_send_keys), () -> showSpecialKeysMenu()));
 //        options.add(new MenuOption(getString(R.string.game_menu_disconnect), () -> game.disconnect()));
 
