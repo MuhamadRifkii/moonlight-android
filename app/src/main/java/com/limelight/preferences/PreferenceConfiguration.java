@@ -95,7 +95,7 @@ public class PreferenceConfiguration {
     private static final boolean DEFAULT_VIBRATE_FALLBACK = false;
     private static final int DEFAULT_VIBRATE_FALLBACK_STRENGTH = 100;
     private static final boolean DEFAULT_FLIP_FACE_BUTTONS = false;
-    private static final boolean DEFAULT_TOUCHSCREEN_TRACKPAD = true;
+    private static final boolean DEFAULT_TOUCHSCREEN_TRACKPAD = false;
     private static final String DEFAULT_AUDIO_CONFIG = "2"; // Stereo
     private static final boolean DEFAULT_LATENCY_TOAST = false;
     private static final String DEFAULT_FRAME_PACING = "latency";

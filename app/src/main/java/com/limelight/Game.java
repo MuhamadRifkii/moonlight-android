@@ -503,7 +503,10 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         // Initialize touch contexts
         for (int i = 0; i < touchContextMap.length; i++) {
             if (!prefConfig.touchscreenTrackpad) {
-                touchContextMap[i] = new AbsoluteTouchContext(conn, i, streamView);
+//                touchContextMap[i] = new AbsoluteTouchContext(conn, i, streamView);
+                touchContextMap[i] = new RelativeTouchContext(conn, i,
+                        REFERENCE_HORIZ_RES, REFERENCE_VERT_RES,
+                        streamView, prefConfig);
             }
             else {
                 touchContextMap[i] = new RelativeTouchContext(conn, i,
@@ -1492,15 +1495,11 @@ public class Game extends Activity implements SurfaceHolder.Callback,
 
     @Override
     public void toggleKeyboard() {
-        View sidebar = findViewById(R.id.game_menu_sidebar);
-        View overlay = findViewById(R.id.sidebar_overlay);
-
         LimeLog.info("Toggling keyboard overlay");
         InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         inputManager.toggleSoftInput(0, 0);
 
-        sidebar.setVisibility(View.GONE);
-        overlay.setVisibility(View.GONE);
+        closeSidebar();
     }
 
     private byte getLiTouchTypeFromEvent(MotionEvent event) {
@@ -2710,22 +2709,21 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     }
 
     private void closeSidebar() {
-        if (isClosingSidebar) {
-            return;
-        }
-        isClosingSidebar = true;
-
         View sidebar = findViewById(R.id.game_menu_sidebar);
         View overlay = findViewById(R.id.sidebar_overlay);
+        overlay.setClickable(false);
 
-        if (sidebar != null && overlay != null) {
+        if (sidebar != null && overlay != null && sidebar.getVisibility() == View.VISIBLE) {
+            // Disable clicks during animation
+            overlay.setClickable(false);
+
             Animation slideOut = AnimationUtils.loadAnimation(this, R.anim.slide_out_right);
-
             sidebar.startAnimation(slideOut);
+
             overlay.animate().alpha(0).setDuration(300).withEndAction(() -> {
                 sidebar.setVisibility(View.GONE);
                 overlay.setVisibility(View.GONE);
-                isClosingSidebar = false;
+                overlay.setClickable(true);
             }).start();
         }
     }
@@ -2757,14 +2755,10 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         // ensures that Android properly handles the back key when needed and only open the game
         // menu when the activity would be closed.
         View sidebar = findViewById(R.id.game_menu_sidebar);
-        View overlay = findViewById(R.id.sidebar_overlay);
 
         if (sidebar != null && sidebar.getVisibility() == View.VISIBLE) {
-            // Close the sidebar if it's open
-            sidebar.setVisibility(View.GONE);
-            overlay.setVisibility(View.GONE);
+            closeSidebar();
         } else {
-            // If sidebar is not open, show the game menu
             showGameMenu(null);
         }
     }
@@ -2794,5 +2788,15 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             }
             isVirtualControllerVisible = !isVirtualControllerVisible; // Toggle the state
         }
+    }
+
+    public void toggleTouchscreenTrackpad() {
+        String PREF_KEY_TRACKPAD = "checkbox_touchscreen_trackpad";
+
+        prefConfig.touchscreenTrackpad = !prefConfig.touchscreenTrackpad;
+
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putBoolean(PREF_KEY_TRACKPAD, prefConfig.touchscreenTrackpad);
+        editor.apply();
     }
 }

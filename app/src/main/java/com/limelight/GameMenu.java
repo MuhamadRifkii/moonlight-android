@@ -122,23 +122,11 @@ public class GameMenu {
     private void showSidebarMenu(String title, MenuOption[] options, boolean isSubMenu) {
         game.runOnUiThread(() -> {
             View sidebar = game.findViewById(R.id.game_menu_sidebar);
-            if (sidebar == null) {
-                Log.e("GameMenu", "Sidebar view is null. Ensure it's in the activity layout.");
-                return;
-            }
 
-            TextView disconnectText = sidebar.findViewById(R.id.disconnect_text);
-            if (disconnectText != null) {
-                disconnectText.setOnClickListener(v -> game.disconnect());
-            } else {
-                Log.e("GameMenu", "Disconnect button not found.");
-            }
+            TextView disconnect = sidebar.findViewById(R.id.disconnect_text);
+            disconnect.setOnClickListener(v -> game.disconnect());
 
             ListView listView = sidebar.findViewById(R.id.menu_list);
-            if (listView == null) {
-                Log.e("GameMenu", "ListView not found in sidebar.");
-                return;
-            }
             List<String> menuLabels = new ArrayList<>();
             if (isSubMenu) {
                 menuLabels.add("← Back"); // Add a "Back" option for submenus
@@ -200,11 +188,14 @@ public class GameMenu {
             options.addAll(device.getGameMenuOptions());
         }
 
-        options.add(new MenuOption(getString(R.string.game_menu_toggle_performance_overlay), () -> game.togglePerformanceOverlay()));
-        options.add(new MenuOption(getString(R.string.game_menu_toggle_virtual_controller),
-                () -> game.toggleVirtualController()));
         options.add(new MenuOption(getString(R.string.game_menu_send_keys), () -> showSpecialKeysMenu()));
-//        options.add(new MenuOption(getString(R.string.game_menu_disconnect), () -> game.disconnect()));
+
+        List<MenuOption> configOptions = new ArrayList<>();
+        configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_performance_overlay), () -> game.togglePerformanceOverlay()));
+        configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_virtual_controller), () -> game.toggleVirtualController()));
+        configOptions.add(new MenuOption(getString(R.string.game_menu_toggle_trackpad), () -> game.toggleTouchscreenTrackpad()));
+
+        options.add(new MenuOption(getString(R.string.game_menu_config), () -> showSidebarMenu("Config", configOptions.toArray(new MenuOption[0]), true)));
 
         showSidebarMenu("Game Menu", options.toArray(new MenuOption[0]), false); // Pass 'false' since this is not a submenu
     }

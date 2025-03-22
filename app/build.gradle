@@ -81,7 +81,7 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix ".debuga"
+            applicationIdSuffix ".debug"
             resValue "string", "app_label", "Moonlight (Debug)"
             resValue "string", "app_label_root", "Moonlight (Root Debug)"
 
