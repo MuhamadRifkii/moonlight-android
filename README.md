@@ -19,6 +19,8 @@ All of the added code is not mine, i've simply just copy it from the pull reques
 - Added Game Back Menu , https://github.com/moonlight-stream/moonlight-android/pull/1171
 - Added Toggling Performance Overlay , https://github.com/moonlight-stream/moonlight-android/pull/1219
 - Added Option for creating custom resolutions , https://github.com/moonlight-stream/moonlight-android/pull/1349
+- Added Toggling Trackpad Mode
+- Added Toggling Virtual Controller
 
 This fork is intended to use upon next version of moonlight is having Absolute Touch functionality added to the master branch. (Please don't complain to me
 if something is not working as intended!).

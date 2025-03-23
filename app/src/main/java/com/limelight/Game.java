@@ -598,7 +598,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         // Set requested orientation for possible new screen size
         setPreferredOrientationForCurrentDisplay();
 
-        if (virtualController != null) {
+        if (virtualController != null && prefConfig.onscreenController) {
             // Refresh layout of OSC for possible new screen size
             virtualController.refreshLayout();
         }
@@ -608,8 +608,9 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             if (isInPictureInPictureMode()) {
                 isHidingOverlays = true;
 
-                if (virtualController != null) {
+                if (virtualController != null && prefConfig.onscreenController) {
                     virtualController.hide();
+                    isVirtualControllerVisible = false;
                 }
 
                 performanceOverlayView.setVisibility(View.GONE);
@@ -626,8 +627,9 @@ public class Game extends Activity implements SurfaceHolder.Callback,
 
                 // Restore overlays to previous state when leaving PiP
 
-                if (virtualController != null) {
+                if (virtualController != null && prefConfig.onscreenController) {
                     virtualController.show();
+                    isVirtualControllerVisible = true;
                 }
 
                 performanceOverlayView.setVisibility(requestedPerformanceOverlayVisibility);
