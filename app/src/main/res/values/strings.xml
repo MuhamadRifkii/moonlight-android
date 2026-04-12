@@ -253,6 +253,10 @@
     <string name="dialog_title_osc_opacity">Change opacity</string>
     <string name="suffix_osc_opacity">%</string>
 
+    <string name="title_stretch_video_offset">Stretch video offset</string>
+    <string name="summary_stretch_video_offset">Adjust offset from the left/right screen edges when stretched for rounded device corners</string>
+    <string name="suffix_px">px</string>
+
     <string name="category_ui_settings">UI Settings</string>
     <string name="title_checkbox_enable_pip">Enable Picture-in-Picture observer mode</string>
     <string name="summary_checkbox_enable_pip">Allows the stream to be viewed (but not controlled) while multitasking</string>

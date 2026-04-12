@@ -285,6 +285,14 @@ public class Game extends Activity implements SurfaceHolder.Callback,
 
         // Listen for non-touch events on the game surface
         streamView = findViewById(R.id.surfaceView);
+
+        if (prefConfig.stretchVideo && prefConfig.stretchOffset > 0) {
+            android.view.ViewGroup.MarginLayoutParams params = (android.view.ViewGroup.MarginLayoutParams) streamView.getLayoutParams();
+            params.leftMargin = prefConfig.stretchOffset;
+            params.rightMargin = prefConfig.stretchOffset;
+            streamView.setLayoutParams(params);
+        }
+
         streamView.setOnGenericMotionListener(this);
         streamView.setOnKeyListener(this);
         streamView.setInputCallbacks(this);

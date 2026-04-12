@@ -48,6 +48,7 @@ public class PreferenceConfiguration {
     private static final String ANALOG_STICK_OPACITY_PREF_STRING = "seekbar_osc_analog_stick_deadzone";
     private static final String CHECKBOX_ENABLE_FREE_ANALOG_STICK = "checkbox_enable_free_analog_stick";
     private static final String SEPARATE_L3_R3_PREF_STRING = "checkbox_only_show_L3R3";
+    private static final String STRETCH_OFFSET_PREF_STRING = "seekbar_stretch_video_offset";
     private static final String LEGACY_DISABLE_FRAME_DROP_PREF_STRING = "checkbox_disable_frame_drop";
     private static final String ENABLE_HDR_PREF_STRING = "checkbox_enable_hdr";
     private static final String ENABLE_PIP_PREF_STRING = "checkbox_enable_pip";
@@ -93,6 +94,7 @@ public class PreferenceConfiguration {
     private static final boolean FLOATING_BUTTON_DEFAULT = false;
     private static final boolean CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT = false;
     private static final int DEFAULT_FREE_ANALOG_STICK_OPACITY = 20;
+    private static final int DEFAULT_STRETCH_OFFSET = 0;
     private static final boolean SEPARATE_L3_R3_DEFAULT = false;
     private static final boolean DEFAULT_ENABLE_HDR = false;
     private static final boolean DEFAULT_ENABLE_PIP = false;
@@ -139,6 +141,7 @@ public class PreferenceConfiguration {
     public FormatOption videoFormat;
     public int deadzonePercentage;
     public int oscOpacity;
+    public int stretchOffset;
     public boolean stretchVideo, enableSops, playHostAudio, disableWarnings;
     public String language;
     public boolean smallIconMode, multiController, usbDriver, flipFaceButtons;
@@ -608,6 +611,8 @@ public class PreferenceConfiguration {
         config.deadzonePercentage = prefs.getInt(DEADZONE_PREF_STRING, DEFAULT_DEADZONE);
 
         config.oscOpacity = prefs.getInt(OSC_OPACITY_PREF_STRING, DEFAULT_OPACITY);
+
+        config.stretchOffset = prefs.getInt(STRETCH_OFFSET_PREF_STRING, DEFAULT_STRETCH_OFFSET);
 
         config.language = prefs.getString(LANGUAGE_PREF_STRING, DEFAULT_LANGUAGE);
 

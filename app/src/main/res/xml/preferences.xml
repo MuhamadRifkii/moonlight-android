@@ -44,6 +44,16 @@
             android:key="checkbox_stretch_video"
             android:title="@string/title_checkbox_stretch_video"
             android:defaultValue="false" />
+        <com.limelight.preferences.SeekBarPreference
+            android:key="seekbar_stretch_video_offset"
+            android:dependency="checkbox_stretch_video"
+            android:title="@string/title_stretch_video_offset"
+            android:summary="@string/summary_stretch_video_offset"
+            android:dialogMessage="@string/title_stretch_video_offset"
+            android:defaultValue="0"
+            android:max="500"
+            android:text="@string/suffix_px"
+            seekbar:min="0" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/category_audio_settings">
         <ListPreference
