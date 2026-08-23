@@ -235,7 +235,7 @@ public class SpecialKeyDialogManager {
         });
     }
 
-    private void showKeyboardSelectionDialog(final OnKeysSelectedListener listener, short[] initialSelectedKeys) {
+    public void showKeyboardSelectionDialog(final OnKeysSelectedListener listener, short[] initialSelectedKeys) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(R.string.dialog_select_keys_title);
 

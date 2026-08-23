@@ -31,6 +31,7 @@ import android.view.WindowInsets;
 import android.widget.Toast;
 
 import com.limelight.LimeLog;
+import com.limelight.OnScreenControlsActivity;
 import com.limelight.PcView;
 import com.limelight.R;
 import com.limelight.binding.video.MediaCodecHelper;
@@ -947,6 +948,11 @@ public class StreamSettings extends Activity {
                     }
                 }
             }
+
+            findPreference("configure_osc").setOnPreferenceClickListener(preference -> {
+                startActivity(new Intent(getActivity(), OnScreenControlsActivity.class));
+                return true;
+            });
 
             findPreference("export_osc").setOnPreferenceClickListener(preference -> {
                 Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);

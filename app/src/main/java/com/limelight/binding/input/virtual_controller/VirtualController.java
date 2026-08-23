@@ -53,8 +53,10 @@ public class VirtualController {
 
     ControllerMode currentMode = ControllerMode.Active;
     ControllerInputContext inputContext = new ControllerInputContext();
+    private int currentOpacity = 100;
 
     private Button buttonConfigure = null;
+    private VirtualControllerElement.OnElementTapListener elementTapListener = null;
 
     private List<VirtualControllerElement> elements = new ArrayList<>();
 
@@ -126,6 +128,29 @@ public class VirtualController {
         }
     }
 
+    public void setControllerMode(ControllerMode mode) {
+        this.currentMode = mode;
+        for (VirtualControllerElement element : elements) {
+            element.invalidate();
+        }
+    }
+
+    public void setOnElementTapListener(VirtualControllerElement.OnElementTapListener listener) {
+        this.elementTapListener = listener;
+        for (VirtualControllerElement element : elements) {
+            element.setOnElementTapListener(listener);
+        }
+    }
+
+    public void removeElement(VirtualControllerElement element) {
+        elements.remove(element);
+        frame_layout.removeView(element);
+    }
+
+    public void saveProfile() {
+        VirtualControllerConfigurationLoader.saveProfile(this, context);
+    }
+
     Handler getHandler() {
         return handler;
     }
@@ -156,9 +181,14 @@ public class VirtualController {
     }
 
     public void setOpacity(int opacity) {
+        this.currentOpacity = opacity;
         for (VirtualControllerElement element : elements) {
             element.setOpacity(opacity);
         }
+    }
+
+    public int getOpacity() {
+        return currentOpacity;
     }
 
 
@@ -166,6 +196,10 @@ public class VirtualController {
         elements.add(element);
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(width, height);
         layoutParams.setMargins(x, y, 0, 0);
+
+        if (elementTapListener != null) {
+            element.setOnElementTapListener(elementTapListener);
+        }
 
         frame_layout.addView(element, layoutParams);
     }

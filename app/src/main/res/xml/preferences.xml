@@ -226,6 +226,10 @@
             android:summary="@string/summary_osc_opacity"
             android:text="@string/suffix_osc_opacity"
             android:title="@string/dialog_title_osc_opacity" />
+        <Preference
+            android:key="configure_osc"
+            android:title="@string/title_configure_osc"
+            android:summary="@string/summary_configure_osc" />
         <com.limelight.preferences.ConfirmDeleteOscPreference
             android:title="@string/title_reset_osc"
             android:summary="@string/summary_reset_osc"

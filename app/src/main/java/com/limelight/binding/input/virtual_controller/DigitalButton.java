@@ -12,6 +12,9 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -127,6 +130,27 @@ public class DigitalButton extends VirtualControllerElement {
     public void setText(String text) {
         this.text = text;
         invalidate();
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    @Override
+    public JSONObject getConfiguration() throws JSONException {
+        JSONObject configuration = super.getConfiguration();
+        if (!text.isEmpty()) {
+            configuration.put("TEXT", text);
+        }
+        return configuration;
+    }
+
+    @Override
+    public void loadConfiguration(JSONObject configuration) throws JSONException {
+        super.loadConfiguration(configuration);
+        if (configuration.has("TEXT")) {
+            setText(configuration.getString("TEXT"));
+        }
     }
 
     public void setUseRoundedRect(boolean useRoundedRect) {

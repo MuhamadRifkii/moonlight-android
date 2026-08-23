@@ -12,6 +12,7 @@ import android.graphics.Paint;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 
 import org.json.JSONException;
@@ -19,6 +20,13 @@ import org.json.JSONObject;
 
 public abstract class VirtualControllerElement extends View {
     protected static boolean _PRINT_DEBUG_INFORMATION = false;
+
+    public interface OnElementTapListener {
+        void onElementTapped(VirtualControllerElement element);
+    }
+
+    private OnElementTapListener tapListener;
+    private float touchDownRawX, touchDownRawY;
 
     public static final int EID_DPAD = 1;
     public static final int EID_LT = 2;
@@ -66,6 +74,14 @@ public abstract class VirtualControllerElement extends View {
 
         this.virtualController = controller;
         this.elementId = elementId;
+    }
+
+    public int getElementId() {
+        return elementId;
+    }
+
+    public void setOnElementTapListener(OnElementTapListener listener) {
+        this.tapListener = listener;
     }
 
     protected void moveElement(int pressed_x, int pressed_y, int x, int y) {
@@ -242,6 +258,8 @@ public abstract class VirtualControllerElement extends View {
                 position_pressed_y = event.getY();
                 startSize_x = getWidth();
                 startSize_y = getHeight();
+                touchDownRawX = event.getRawX();
+                touchDownRawY = event.getRawY();
 
                 if (virtualController.getControllerMode() == VirtualController.ControllerMode.MoveButtons)
                     actionEnableMove();
@@ -276,7 +294,17 @@ public abstract class VirtualControllerElement extends View {
             }
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP: {
+                float dx = event.getRawX() - touchDownRawX;
+                float dy = event.getRawY() - touchDownRawY;
+                int slop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
+                boolean wasTap = tapListener != null &&
+                        (dx * dx + dy * dy) <= slop * (float) slop;
+
                 actionCancel();
+
+                if (wasTap && event.getActionMasked() == MotionEvent.ACTION_UP) {
+                    tapListener.onElementTapped(this);
+                }
                 return true;
             }
             default: {

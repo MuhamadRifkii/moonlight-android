@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.limelight.binding.input.OscEditorToolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/osc_toolbar"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_osc_toolbar"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingLeft="8dp"
+    android:paddingRight="8dp">
+
+    <ImageButton
+        android:id="@+id/osc_toolbar_add"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/osc_add_element_title"
+        android:src="@drawable/ic_osc_add" />
+
+    <Button
+        android:id="@+id/osc_toolbar_mode"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="88dp"
+        android:text="@string/osc_toolbar_move_mode"
+        android:textColor="#FFFFFF" />
+
+    <Button
+        android:id="@+id/osc_toolbar_reset"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/osc_toolbar_reset"
+        android:textColor="#FFFFFF" />
+
+    <ImageButton
+        android:id="@+id/osc_toolbar_settings"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/osc_edit_opacity_title"
+        android:src="@drawable/ic_settings"
+        android:tint="#FFFFFF" />
+
+    <ImageButton
+        android:id="@+id/osc_toolbar_done"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/button_done"
+        android:src="@drawable/ic_done"
+        android:tint="#FFFFFF" />
+</com.limelight.binding.input.OscEditorToolbar>

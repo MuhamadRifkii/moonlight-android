@@ -4,6 +4,7 @@ package com.limelight;
 import com.limelight.binding.PlatformBinding;
 import com.limelight.binding.audio.AndroidAudioRenderer;
 import com.limelight.binding.input.ControllerHandler;
+import com.limelight.binding.input.OscEditorSession;
 import com.limelight.binding.input.GameInputDevice;
 import com.limelight.binding.input.KeyboardTranslator;
 import com.limelight.binding.input.capture.InputCaptureManager;
@@ -14,6 +15,7 @@ import com.limelight.binding.input.driver.UsbDriverService;
 import com.limelight.binding.input.evdev.EvdevListener;
 import com.limelight.binding.input.touch.TouchContext;
 import com.limelight.binding.input.virtual_controller.VirtualController;
+import com.limelight.binding.input.virtual_keyboard.VirtualKeyManager;
 import com.limelight.binding.video.CrashListener;
 import com.limelight.binding.video.MediaCodecDecoderRenderer;
 import com.limelight.binding.video.MediaCodecHelper;
@@ -124,6 +126,9 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     private ControllerHandler controllerHandler;
     private KeyboardTranslator keyboardTranslator;
     public VirtualController virtualController;
+    public VirtualKeyManager virtualKeyManager;
+    private OscEditorSession oscEditorSession;
+    private boolean oscEditorWasControllerVisible;
 
     private PreferenceConfiguration prefConfig;
     private SharedPreferences tombstonePrefs;
@@ -574,14 +579,24 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                 this);
         virtualController.refreshLayout();
 
-        if (prefConfig.onscreenController) {
+        virtualKeyManager = new VirtualKeyManager(this, (FrameLayout) streamView.getParent(), (keys, isDown) -> {
+            if (conn == null) return;
+            final byte[] modifier = {(byte) 0};
+
+            for (short key : keys) {
+                conn.sendKeyboardInput(key, isDown ? KeyboardPacket.KEY_DOWN : KeyboardPacket.KEY_UP, modifier[0], (byte) 0);
+                modifier[0] |= getModifier(key);
+            }
+        });
+
+        virtualKeyManager.setVisibility(prefConfig.onscreenVirtualKeys);
+
+        if (prefConfig.onscreenController || isVirtualControllerVisible) {
             virtualController.show();
             isVirtualControllerVisible = true;
         } else {
-            new Handler(Looper.getMainLooper()).post(() -> {
-                virtualController.hide();
-                isVirtualControllerVisible = false;
-            });
+            virtualController.hide();
+            isVirtualControllerVisible = false;
         }
 
         if (prefConfig.usbDriver) {
@@ -737,6 +752,9 @@ public class Game extends Activity implements SurfaceHolder.Callback,
             // Refresh layout of OSC for possible new screen size
             virtualController.refreshLayout();
         }
+        if (virtualKeyManager != null) {
+            virtualKeyManager.setVisibility(prefConfig.onscreenVirtualKeys);
+        }
 
         // Hide on-screen overlays in PiP mode
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -753,6 +771,9 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                 if (virtualController != null && prefConfig.onscreenController) {
                     virtualController.hide();
                     isVirtualControllerVisible = false;
+                }
+                if (virtualKeyManager != null) {
+                    virtualKeyManager.setVisibility(false);
                 }
 
                 performanceOverlayView.setVisibility(View.GONE);
@@ -777,6 +798,9 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                 if (virtualController != null && prefConfig.onscreenController) {
                     virtualController.show();
                     isVirtualControllerVisible = true;
+                }
+                if (virtualKeyManager != null) {
+                    virtualKeyManager.setVisibility(prefConfig.onscreenVirtualKeys);
                 }
 
                 performanceOverlayView.setVisibility(requestedPerformanceOverlayVisibility);
@@ -1241,8 +1265,13 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         SpinnerDialog.closeDialogs(this);
         Dialog.closeDialogs();
 
+        closeOscEditor();
+
         if (virtualController != null) {
             virtualController.hide();
+        }
+        if (virtualKeyManager != null) {
+            virtualKeyManager.setVisibility(false);
         }
 
         if (conn != null) {
@@ -2148,6 +2177,10 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                     // Ignore presses when the virtual controller is being configured
                     return true;
                 }
+                if (virtualKeyManager != null && virtualKeyManager.isEditMode()) {
+                    // Ignore presses when virtual keys are being configured
+                    return true;
+                }
 
                 // If this is the parent view, we'll offset our coordinates to appear as if they
                 // are relative to the StreamView like our StreamView touch events are.
@@ -2928,12 +2961,13 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     }
 
     public void toggleVirtualController() {
-        String PREF_KEY_OSC = "checkbox_show_onscreen_controls";
-        prefConfig.onscreenController = !prefConfig.onscreenController;
+        if (!connected) {
+            return;
+        }
 
-        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-        editor.putBoolean(PREF_KEY_OSC, prefConfig.onscreenController);
-        editor.apply();
+        // Just blindly flip it and rely on the lifecycle methods to trigger
+        // the proper layout updates.
+        prefConfig.onscreenController = !prefConfig.onscreenController;
 
         if (virtualController != null) {
             if (isVirtualControllerVisible) {
@@ -2943,6 +2977,81 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                 virtualController.show();
             }
             isVirtualControllerVisible = !isVirtualControllerVisible; // Toggle the state
+        }
+    }
+
+    public void toggleVirtualKeys() {
+        if (!connected) {
+            return;
+        }
+
+        prefConfig.onscreenVirtualKeys = !prefConfig.onscreenVirtualKeys;
+
+        PreferenceConfiguration.setOnscreenVirtualKeys(this, prefConfig.onscreenVirtualKeys);
+
+        if (virtualKeyManager != null && !isHidingOverlays) {
+            virtualKeyManager.setVisibility(prefConfig.onscreenVirtualKeys);
+        }
+    }
+
+    public void toggleOscEditor() {
+        if (oscEditorSession != null && oscEditorSession.isAttached()) {
+            closeOscEditor();
+        }
+        else {
+            openOscEditor();
+        }
+    }
+
+    public void openOscEditor() {
+        if (virtualController == null || virtualKeyManager == null || streamView == null) {
+            return;
+        }
+
+        // Ensure the controller overlay is visible while editing,
+        // restoring the prior visibility when the editor closes.
+        oscEditorWasControllerVisible = isVirtualControllerVisible;
+        if (!isVirtualControllerVisible) {
+            virtualController.refreshLayout();
+            virtualController.show();
+            isVirtualControllerVisible = true;
+        }
+
+        if (oscEditorSession == null) {
+            oscEditorSession = new OscEditorSession(this,
+                    (FrameLayout) streamView.getParent(),
+                    virtualController,
+                    virtualKeyManager,
+                    null);
+        }
+
+        oscEditorSession.attach();
+
+        Toast.makeText(this, R.string.osc_editor_opened_toast, Toast.LENGTH_SHORT).show();
+    }
+
+    public void closeOscEditor() {
+        if (oscEditorSession != null && oscEditorSession.isAttached()) {
+            oscEditorSession.detach();
+        }
+
+        if (!oscEditorWasControllerVisible && virtualController != null && !isFinishing()) {
+            virtualController.hide();
+            isVirtualControllerVisible = false;
+        }
+    }
+
+    private static byte getModifier(short key) {
+        switch (key) {
+            case KeyboardTranslator.VK_LSHIFT:
+                return KeyboardPacket.MODIFIER_SHIFT;
+            case KeyboardTranslator.VK_LCONTROL:
+                return KeyboardPacket.MODIFIER_CTRL;
+            case KeyboardTranslator.VK_LWIN:
+                return KeyboardPacket.MODIFIER_META;
+
+            default:
+                return 0;
         }
     }
 

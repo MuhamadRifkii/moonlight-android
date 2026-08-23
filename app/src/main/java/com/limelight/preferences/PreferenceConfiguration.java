@@ -44,6 +44,7 @@ public class PreferenceConfiguration {
     private static final String VIDEO_FORMAT_PREF_STRING = "video_format";
     static final String VIDEO_DECODER_PREF_STRING = "list_video_decoder";
     private static final String ONSCREEN_CONTROLLER_PREF_STRING = "checkbox_show_onscreen_controls";
+    private static final String VIRTUAL_KEYS_PREF_STRING = "checkbox_onscreen_virtual_keys";
     private static final String FLOATING_BUTTON_PREF_STRING = "checkbox_show_floating_button_controls";
     private static final String ANALOG_STICK_OPACITY_PREF_STRING = "seekbar_osc_analog_stick_deadzone";
     private static final String CHECKBOX_ENABLE_FREE_ANALOG_STICK = "checkbox_enable_free_analog_stick";
@@ -84,6 +85,7 @@ public class PreferenceConfiguration {
     private static final boolean DEFAULT_HOST_AUDIO = false;
     private static final int DEFAULT_DEADZONE = 7;
     private static final int DEFAULT_OPACITY = 90;
+    private static final boolean DEFAULT_VIRTUAL_KEYS = true;
     public static final String DEFAULT_LANGUAGE = "default";
     private static final boolean DEFAULT_MULTI_CONTROLLER = true;
     private static final boolean DEFAULT_USB_DRIVER = true;
@@ -146,6 +148,7 @@ public class PreferenceConfiguration {
     public String language;
     public boolean smallIconMode, multiController, usbDriver, flipFaceButtons;
     public boolean onscreenController;
+    public boolean onscreenVirtualKeys;
     public boolean onscreenFloatingButton;
     public boolean enableFreeAnalogStick;
     public int virtualAnalogDeadzonePercentage;
@@ -366,6 +369,16 @@ public class PreferenceConfiguration {
         return getDefaultBitrate(
                 prefs.getString(RESOLUTION_PREF_STRING, DEFAULT_RESOLUTION),
                 prefs.getString(FPS_PREF_STRING, DEFAULT_FPS));
+    }
+
+    public static void setOscOpacity(Context context, int opacity) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putInt(OSC_OPACITY_PREF_STRING, opacity).apply();
+    }
+
+    public static void setOnscreenVirtualKeys(Context context, boolean enabled) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().putBoolean(VIRTUAL_KEYS_PREF_STRING, enabled).apply();
     }
 
     private static FormatOption getVideoFormatValue(Context context) {
@@ -625,6 +638,7 @@ public class PreferenceConfiguration {
         config.multiController = prefs.getBoolean(MULTI_CONTROLLER_PREF_STRING, DEFAULT_MULTI_CONTROLLER);
         config.usbDriver = prefs.getBoolean(USB_DRIVER_PREF_SRING, DEFAULT_USB_DRIVER);
         config.onscreenController = prefs.getBoolean(ONSCREEN_CONTROLLER_PREF_STRING, ONSCREEN_CONTROLLER_DEFAULT);
+        config.onscreenVirtualKeys = prefs.getBoolean(VIRTUAL_KEYS_PREF_STRING, DEFAULT_VIRTUAL_KEYS);
         config.onscreenFloatingButton = prefs.getBoolean(FLOATING_BUTTON_PREF_STRING, FLOATING_BUTTON_DEFAULT);
         config.enableFreeAnalogStick=prefs.getBoolean(CHECKBOX_ENABLE_FREE_ANALOG_STICK, CHECKBOX_ENABLE_FREE_ANALOG_STICK_DEFAULT);
         config.virtualAnalogDeadzonePercentage = prefs.getInt(ANALOG_STICK_OPACITY_PREF_STRING, DEFAULT_FREE_ANALOG_STICK_OPACITY);
